@@ -1,63 +1,31 @@
-name: build
-on: [push, pull_request]
-jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-        build_type: [debug]
-        enable_ui: [off]
-        include:
-          - os: ubuntu-latest
-            build_type: debug
-            enable_ui: on
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
-    - name: ccache
-      uses: hendrikmuhs/ccache-action@v1
-      if: runner.os == 'Linux'
-      with:
-        key: ${{ matrix.os }}-${{ matrix.enable_ui }}
-    - uses: seanmiddleditch/gha-setup-ninja@master
-    - uses: ilammy/msvc-dev-cmd@v1
-      if: runner.os == 'Windows'
-    - name: Install Dependencies
-      shell: bash
-      run: |
-        if [[ "${{ runner.os }}" == "Linux" ]] ; then
-          sudo apt-get update -qq
-          sudo apt-get install -y \
-            libx11-dev libxcursor-dev libxi-dev
-        fi
-    - name: Generating Makefiles
-      shell: bash
-      run: |
-        cmake -S . -B build -G Ninja \
-          -DENABLE_TESTS=ON \
-          -DENABLE_UI=${{ matrix.enable_ui }}
-    - name: Compiling
-      shell: bash
-      run: |
-        cd build && ninja
-    - name: Running C++ Tests
-      shell: bash
-      run: |
-        if [[ "${{ runner.os }}" == "Linux" ]] ; then
-          export XVFB=xvfb-run
-        fi
-        cd build && $XVFB ctest --output-on-failure
-    - name: Running CLI Tests
-      shell: bash
-      run: |
-        if [[ "${{ runner.os }}" == "Linux" ]] ; then
-          export XVFB=xvfb-run
-        fi
-        cd build
-        export ASEPRITE=$PWD/bin/aseprite
-        git clone --recursive https://github.com/aseprite/tests.git
-        cd tests
-        $XVFB bash run-tests.sh
+name: Build CMake
+  # You may pin to the exact commit or the version.
+  # uses: ashutoshvarma/action-cmake-build@0fbeeac8b1f9c8aef99e9eae9d78529ed3b0364b
+  uses: ashutoshvarma/action-cmake-build@v1
+  with:
+    # Build directory where build files will be generated
+    build-dir: # default is ${{ runner.workspace }}/build
+    # CMake build type (Release, Debug, MinSizeRel, RelWithDebInfo)
+    build-type: # default is Release
+    # C Compiler for toolchain
+    cc: # optional
+    # C++ Compiler for toolchain
+    cxx: # optional
+    # CMake build target
+    target: # optional
+    # Number of concurrent jobs for build and test
+    parallel: # optional, default is 4
+    # Run CTest or not
+    run-test: # optional, default is false
+    # Run 'cmake --install' or not
+    install-build: # optional, default is false
+    # Update git submodules
+    submodule-update: # optional, default is false
+    # Misc Options to pass to CMake while configuring project
+    configure-options: # optional
+    # Misc Options to pass to CMake while building project using cmake --build
+    build-options: # optional
+    # Misc Options to pass to CMake while installing project using cmake --install
+    install-options: # optional
+    # Misc Options to pass to CTest
+    ctest-options: # optional
